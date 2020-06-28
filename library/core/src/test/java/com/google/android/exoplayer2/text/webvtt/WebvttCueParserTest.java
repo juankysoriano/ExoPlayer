@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.graphics.Typeface;
 import android.text.Spanned;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -99,6 +101,54 @@ public final class WebvttCueParserTest {
     assertThat(text.getSpanEnd(styleSpans[0])).isEqualTo(43);
 
     assertThat(styleSpans[0].getStyle()).isEqualTo(ITALIC);
+  }
+
+  @Test
+  public void testForegroundTextColorClass() throws Exception {
+    Spanned text = parseCueText("In this sentence <c.red>this text</c> is red");
+
+    assertThat(text.toString()).isEqualTo("In this sentence this text is red");
+
+    ForegroundColorSpan[] foregroundColorSpans = getSpans(text, ForegroundColorSpan.class);
+    assertThat(foregroundColorSpans).hasLength(1);
+
+    assertThat(text.getSpanStart(foregroundColorSpans[0])).isEqualTo(17);
+    assertThat(text.getSpanEnd(foregroundColorSpans[0])).isEqualTo(26);
+  }
+
+  @Test
+  public void testUnsupportedColorForForegroundTextColorClass() throws Exception {
+    Spanned text = parseCueText("In this sentence <c.papayawhip>this text</c> is not papaya");
+
+    assertThat(text.toString()).isEqualTo("In this sentence this text is not papaya");
+
+    ForegroundColorSpan[] foregroundColorSpans = getSpans(text, ForegroundColorSpan.class);
+    assertThat(foregroundColorSpans).hasLength(0);
+  }
+
+  @Test
+  public void testBackgroundTextColorClass() throws Exception {
+    Spanned text = parseCueText("In this sentence <c.bg_red>this text</c> has a red background");
+
+    assertThat(text.toString()).isEqualTo("In this sentence this text has a red background");
+
+    BackgroundColorSpan[] backgroundColorSpans = getSpans(text, BackgroundColorSpan.class);
+    assertThat(backgroundColorSpans).hasLength(1);
+
+    assertThat(text.getSpanStart(backgroundColorSpans[0])).isEqualTo(17);
+    assertThat(text.getSpanEnd(backgroundColorSpans[0])).isEqualTo(26);
+  }
+
+  @Test
+  public void testUnsupportedColorForBackgroundTextColorClass() throws Exception {
+    Spanned text = parseCueText(
+        "In this sentence <c.bg_papayawhip>this text</c> doesn't have a papaya background");
+
+    assertThat(text.toString())
+        .isEqualTo("In this sentence this text doesn't have a papaya background");
+
+    BackgroundColorSpan[] backgroundColorSpans = getSpans(text, BackgroundColorSpan.class);
+    assertThat(backgroundColorSpans).hasLength(0);
   }
 
   @Test

@@ -40,7 +40,9 @@ import com.google.android.exoplayer2.util.Util;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,6 +77,31 @@ public final class WebvttCueParser {
   private static final int STYLE_ITALIC = Typeface.ITALIC;
 
   private static final String TAG = "WebvttCueParser";
+
+  private static final Map<String, Integer> DEFAULT_COLORS;
+  private static final Map<String, Integer> DEFAULT_BACKGROUND_COLORS;
+
+  static {
+    DEFAULT_COLORS = new HashMap<>();
+    DEFAULT_COLORS.put("black", 0xFF000000);
+    DEFAULT_COLORS.put("blue", 0xFF0000FF);
+    DEFAULT_COLORS.put("cyan", 0xFF00FFFF);
+    DEFAULT_COLORS.put("lime", 0xFF00FF00);
+    DEFAULT_COLORS.put("magenta", 0xFFFF00FF);
+    DEFAULT_COLORS.put("red", 0xFFFF0000);
+    DEFAULT_COLORS.put("white", 0xFFFFFFFF);
+    DEFAULT_COLORS.put("yellow", 0xFFFFFF00);
+
+    DEFAULT_BACKGROUND_COLORS = new HashMap<>();
+    DEFAULT_BACKGROUND_COLORS.put("bg_black", 0xFF000000);
+    DEFAULT_BACKGROUND_COLORS.put("bg_blue", 0xFF0000FF);
+    DEFAULT_BACKGROUND_COLORS.put("bg_cyan", 0xFF00FFFF);
+    DEFAULT_BACKGROUND_COLORS.put("bg_lime", 0xFF00FF00);
+    DEFAULT_BACKGROUND_COLORS.put("bg_magenta", 0xFFFF00FF);
+    DEFAULT_BACKGROUND_COLORS.put("bg_red", 0xFFFF0000);
+    DEFAULT_BACKGROUND_COLORS.put("bg_white", 0xFFFFFFFF);
+    DEFAULT_BACKGROUND_COLORS.put("bg_yellow", 0xFFFFFF00);
+  }
 
   private final StringBuilder textBuilder;
 
@@ -392,6 +419,8 @@ public final class WebvttCueParser {
         text.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         break;
       case TAG_CLASS:
+        applySupportedClasses(text, startTag.classes, start, end);
+        break;
       case TAG_LANG:
       case TAG_VOICE:
       case "": // Case of the "whole cue" virtual tag.
@@ -404,6 +433,20 @@ public final class WebvttCueParser {
     int styleMatchesCount = scratchStyleMatches.size();
     for (int i = 0; i < styleMatchesCount; i++) {
       applyStyleToText(text, scratchStyleMatches.get(i).style, start, end);
+    }
+  }
+
+  private static void applySupportedClasses(SpannableStringBuilder text, String[] classes,
+      int start, int end) {
+    for (String className : classes) {
+      if (DEFAULT_COLORS.containsKey(className)) {
+        int color = DEFAULT_COLORS.get(className);
+        text.setSpan(new ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+      }
+      if (DEFAULT_BACKGROUND_COLORS.containsKey(className)) {
+        int color = DEFAULT_BACKGROUND_COLORS.get(className);
+        text.setSpan(new BackgroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+      }
     }
   }
 
